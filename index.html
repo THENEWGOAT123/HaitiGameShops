@@ -268,9 +268,11 @@ async function loadLeaderboard(){
  const ids=[...totals.keys()]; let names={};
  if(ids.length){const {data:profiles,error:pe}=await sb.from('profiles').select('id,display_name').in('id',ids);if(!pe)(profiles||[]).forEach(p=>names[p.id]=p.display_name||'Player')}
  const rows=[...totals.entries()].map(([id,v])=>({id,...v,name:names[id]||'Player'})).sort((a,b)=>b.spent-a.spent).slice(0,10);
+ const isStaff=['owner','admin'].includes(currentRole);
  const maskName=n=>{n=String(n||'Player');if(n.length<3)return n[0]+'••';return n.slice(0,Math.min(2,Math.ceil(n.length/3)))+'•'.repeat(Math.min(5,Math.max(2,n.length-2)))};
- const maskMoney=n=>{const s=Math.round(n).toLocaleString('en-US');if(s.length<=2)return '•• HTG';return s.slice(0,Math.min(2,s.length-2))+'••• HTG'};
- list.innerHTML=rows.length?rows.map((r,i)=>`<div class="row"><div><b>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)} ${esc(maskName(r.name))}</b><small>${r.count} kòmand · depans: ${esc(maskMoney(r.spent))}</small></div><span class="tag">${i===0?'Pri: 110 💎':'Top 10'}</span></div>`).join(''):'<div class="empty">Pa gen kòmand nan 7 dènye jou yo ankò. Fè premye acha ou pou parèt nan klasman an!</div>';
+ const shownName=n=>isStaff?String(n||'Player'):maskName(n);
+ const shownMoney=n=>Math.round(Number(n)||0).toLocaleString('en-US')+' HTG';
+ list.innerHTML=rows.length?rows.map((r,i)=>`<div class="row"><div><b>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)} ${esc(shownName(r.name))}</b><small>${r.count} kòmand · depans: ${esc(shownMoney(r.spent))}</small></div><span class="tag">${i===0?'Pri: 110 💎':'Top 10'}</span></div>`).join(''):'<div class="empty">Pa gen kòmand nan 7 dènye jou yo ankò. Fè premye acha ou pou parèt nan klasman an!</div>';
  $('leaderboardUpdated').textContent='Mizajou: '+new Date().toLocaleString();
 }
 $('refreshLeaderboard')?.addEventListener('click',()=>loadLeaderboard().catch(e=>{console.error(e);$('leaderboardList').innerHTML='<div class="empty">Pa t kapab chaje klasman an. Eseye ankò.</div>'}));
